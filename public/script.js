@@ -10,9 +10,9 @@ document.addEventListener('DOMContentLoaded', function() {
     // WebSocket connection
     const ws = new WebSocket('ws://localhost:3000');
 
-    ws.onmessage = function(event) {
+    ws.onmessage = async function(event) {
         const data = JSON.parse(event.data);
-        processWebSocketMessage(data);
+        await processWebSocketMessage(data);
     };
 
     async function processWebSocketMessage(data) {
@@ -35,24 +35,12 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
     video.addEventListener('timeupdate', function() {
-        // Do not send the update at every time change to reduce WebSocket traffic
-        if (Math.abs(video.currentTime - lastSentTime) >= 1) {
-            sendUpdateTime();
-        }
+        sendUpdateTime();
     });
 
     volumeControl.addEventListener('input', function() {
         video.volume = volumeControl.value;
     });
-
-    let lastSentTime = 0;
-
-    async function sendUpdateTime() {
-        const currentTime = video.currentTime;
-        ws.send(JSON.stringify({ type: 'updateTime', data: currentTime }));
-        lastSentTime = currentTime;
-    }
-});
 
 
     async function sendUpdateTime() {
