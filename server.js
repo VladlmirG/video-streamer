@@ -8,6 +8,7 @@ const server = http.createServer(app);
 const wss = new WebSocket.Server({ server });
 
 let currentPlaybackTime = 0;
+let isPlaying = true; // Initial state is playing
 const loopDuration = 60; // Set the duration of your video loop in seconds
 
 // Serve static files from the 'public' directory
@@ -23,15 +24,32 @@ app.use((req, res, next) => {
 // Serve video files from the 'videos' directory
 app.use('/videos', express.static(path.join(__dirname, 'public', 'videos')));
 
-// Broadcast current playback time to all clients at regular intervals
+// Broadcast current playback time and play/pause state to all clients at regular intervals
 setInterval(() => {
     updatePlaybackTime();
+    broadcastState();
 }, 1000); // Adjust the interval as needed
 
 // WebSocket connection handling
 wss.on('connection', (ws) => {
-    // Send the current playback time to the new client
-    ws.send(JSON.stringify({ type: 'currentTime', data: currentPlaybackTime }));
+    // Send the current playback time and play/pause state to the new client
+    ws.send(JSON.stringify({ type: 'currentTime', data: currentPlaybackTime, isPlaying }));
+
+    // Handle messages from clients
+    ws.on('message', (message) => {
+        const data = JSON.parse(message);
+        if (data.type === 'updateTime') {
+            // Update the current playback time
+            currentPlaybackTime = data.data;
+            // Broadcast the updated time and play/pause state to all connected clients
+            broadcastState();
+        } else if (data.type === 'playPause') {
+            // Toggle play/pause state
+            isPlaying = !isPlaying;
+            // Broadcast the updated play/pause state to all connected clients
+            broadcastState();
+        }
+    });
 
     // Handle WebSocket connection closing
     ws.on('close', () => {
@@ -40,18 +58,17 @@ wss.on('connection', (ws) => {
 });
 
 function updatePlaybackTime() {
-    // Update the current playback time
-    currentPlaybackTime = (currentPlaybackTime + 1) % loopDuration;
-
-    // Broadcast the updated time to all connected clients
-    broadcastUpdateTime();
+    // Update the current playback time only if the video is playing
+    if (isPlaying) {
+        currentPlaybackTime = (currentPlaybackTime + 1) % loopDuration;
+    }
 }
 
-function broadcastUpdateTime() {
-    // Broadcast the updated time to all connected clients
+function broadcastState() {
+    // Broadcast the updated time and play/pause state to all connected clients
     wss.clients.forEach((client) => {
         if (client.readyState === WebSocket.OPEN) {
-            client.send(JSON.stringify({ type: 'currentTime', data: currentPlaybackTime }));
+            client.send(JSON.stringify({ type: 'currentTime', data: currentPlaybackTime, isPlaying }));
         }
     });
 }
