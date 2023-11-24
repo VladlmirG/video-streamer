@@ -1,32 +1,53 @@
 document.addEventListener('DOMContentLoaded', function() {
     const video = document.getElementById('videoPlayer');
+    const playPauseBtn = document.getElementById('playPauseBtn');
+    const volumeControl = document.getElementById('volumeControl');
+    const customControls = document.getElementById('custom-controls');
+    const liveDot = document.getElementById('liveDot');
     
+    let isPlaying = false; // Track the playback state
+
     // WebSocket connection
     const ws = new WebSocket('ws://localhost:3000');
 
-    ws.onmessage = function(event) {
+    ws.onmessage = async function(event) {
         const data = JSON.parse(event.data);
-        processWebSocketMessage(data);
+        await processWebSocketMessage(data);
     };
 
-    function processWebSocketMessage(data) {
+    async function processWebSocketMessage(data) {
         if (data.type === 'currentTime') {
             // Update the video's currentTime without triggering a seek event
             video.currentTime = data.data;
-        } else if (data.type === 'isPlaying') {
-            // Toggle play/pause based on the received state
-            if (data.isPlaying) {
-                video.play();
-            } else {
-                video.pause();
-            }
         }
     }
 
-    video.addEventListener('loadeddata', function() {
-        // Start the loop when the video is loaded
-        video.play();
+    playPauseBtn.addEventListener('click', function() {
+        if (isPlaying) {
+            video.pause();
+            playPauseBtn.textContent = 'Play';
+        } else {
+            video.play();
+            playPauseBtn.textContent = 'Pause';
+        }
+        isPlaying = !isPlaying;
+        sendUpdateTime();
     });
+
+    video.addEventListener('timeupdate', function() {
+        sendUpdateTime();
+    });
+
+    volumeControl.addEventListener('input', function() {
+        video.volume = volumeControl.value;
+    });
+
+
+    async function sendUpdateTime() {
+        const currentTime = video.currentTime;
+        ws.send(JSON.stringify({ type: 'updateTime', data: currentTime }));
+    }
+});
 
     video.addEventListener('click', function() {
         // Toggle play/pause state on video click
