@@ -7,7 +7,7 @@ const app = express();
 const server = http.createServer(app);
 const wss = new WebSocket.Server({ server });
 
-let currentPlaybackTime = 5;
+let currentPlaybackTime = 0;
 
 // Serve static files from the 'public' directory
 app.use(express.static(path.join(__dirname, 'public')));
@@ -22,11 +22,6 @@ app.use((req, res, next) => {
 // Serve video files from the 'videos' directory
 app.use('/videos', express.static(path.join(__dirname, 'public', 'videos')));
 
-// Broadcast current playback time to all clients at regular intervals
-setInterval(() => {
-    broadcastUpdateTime();
-}, 1000); // Adjust the interval as needed
-
 // WebSocket connection handling
 wss.on('connection', (ws) => {
     // Send the current playback time to the new client
@@ -38,6 +33,12 @@ wss.on('connection', (ws) => {
         if (data.type === 'updateTime') {
             // Update the current playback time
             currentPlaybackTime = data.data;
+            // Broadcast the updated time to all connected clients
+            wss.clients.forEach((client) => {
+                if (client !== ws && client.readyState === WebSocket.OPEN) {
+                    client.send(JSON.stringify({ type: 'currentTime', data: currentPlaybackTime }));
+                }
+            });
         }
     });
 
@@ -46,21 +47,6 @@ wss.on('connection', (ws) => {
         console.log('Client disconnected');
     });
 });
-
-function broadcastUpdateTime() {
-    // Broadcast the updated time to all connected clients
-    wss.clients.forEach((client) => {
-        if (client.readyState === WebSocket.OPEN) {
-            client.send(JSON.stringify({ type: 'currentTime', data: currentPlaybackTime }));
-        }
-    });
-}
-
-const PORT = process.env.PORT || 3000;
-server.listen(PORT, () => {
-    console.log(`Server running on http://localhost:${PORT}`);
-});
-
 
 const PORT = process.env.PORT || 3000;
 server.listen(PORT, () => {
