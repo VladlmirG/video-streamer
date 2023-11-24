@@ -15,12 +15,13 @@ document.addEventListener('DOMContentLoaded', function() {
         await processWebSocketMessage(data);
     };
 
-    function processWebSocketMessage(data) {
-        if (data.type === 'updateTime') {
+    async function processWebSocketMessage(data) {
+        if (data.type === 'currentTime') {
             // Update the video's currentTime without triggering a seek event
             video.currentTime = data.data;
         }
     }
+    
     playPauseBtn.addEventListener('click', function() {
         if (isPlaying) {
             video.pause();
