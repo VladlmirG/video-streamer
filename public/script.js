@@ -35,16 +35,22 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
     video.addEventListener('timeupdate', function() {
-        sendUpdateTime();
+        // Do not send the update at every time change to reduce WebSocket traffic
+        if (Math.abs(video.currentTime - lastSentTime) >= 1) {
+            sendUpdateTime();
+        }
     });
 
     volumeControl.addEventListener('input', function() {
         video.volume = volumeControl.value;
     });
 
+    let lastSentTime = 0;
+
     async function sendUpdateTime() {
         const currentTime = video.currentTime;
         ws.send(JSON.stringify({ type: 'updateTime', data: currentTime }));
+        lastSentTime = currentTime;
     }
 });
 
