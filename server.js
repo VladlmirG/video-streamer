@@ -22,6 +22,11 @@ app.use((req, res, next) => {
 // Serve video files from the 'videos' directory
 app.use('/videos', express.static(path.join(__dirname, 'public', 'videos')));
 
+// Broadcast current playback time to all clients at regular intervals
+setInterval(() => {
+    broadcastUpdateTime();
+}, 1000); // Adjust the interval as needed
+
 // WebSocket connection handling
 wss.on('connection', (ws) => {
     // Send the current playback time to the new client
@@ -33,8 +38,6 @@ wss.on('connection', (ws) => {
         if (data.type === 'updateTime') {
             // Update the current playback time
             currentPlaybackTime = data.data;
-            // Broadcast the updated time to all connected clients
-            broadcastUpdateTime();
         }
     });
 
@@ -52,6 +55,12 @@ function broadcastUpdateTime() {
         }
     });
 }
+
+const PORT = process.env.PORT || 3000;
+server.listen(PORT, () => {
+    console.log(`Server running on http://localhost:${PORT}`);
+});
+
 
 const PORT = process.env.PORT || 3000;
 server.listen(PORT, () => {
