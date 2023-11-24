@@ -34,11 +34,7 @@ wss.on('connection', (ws) => {
             // Update the current playback time
             currentPlaybackTime = data.data;
             // Broadcast the updated time to all connected clients
-            wss.clients.forEach((client) => {
-                if (client !== ws && client.readyState === WebSocket.OPEN) {
-                    client.send(JSON.stringify({ type: 'currentTime', data: currentPlaybackTime }));
-                }
-            });
+            broadcastUpdateTime();
         }
     });
 
@@ -47,6 +43,15 @@ wss.on('connection', (ws) => {
         console.log('Client disconnected');
     });
 });
+
+function broadcastUpdateTime() {
+    // Broadcast the updated time to all connected clients
+    wss.clients.forEach((client) => {
+        if (client.readyState === WebSocket.OPEN) {
+            client.send(JSON.stringify({ type: 'currentTime', data: currentPlaybackTime }));
+        }
+    });
+}
 
 const PORT = process.env.PORT || 3000;
 server.listen(PORT, () => {
