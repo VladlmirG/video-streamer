@@ -7,7 +7,7 @@ const app = express();
 const server = http.createServer(app);
 const wss = new WebSocket.Server({ server });
 
-let currentPlaybackTime = 0;
+let currentPlaybackTime = 5;
 
 // Serve static files from the 'public' directory
 app.use(express.static(path.join(__dirname, 'public')));
