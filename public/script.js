@@ -27,12 +27,6 @@ document.addEventListener('DOMContentLoaded', function () {
         sendUpdateTime();
     });
 
-    video.addEventListener('ended', function () {
-        // Video finished, play again
-        video.currentTime = 0; // Reset to the beginning
-        video.play();
-    });
-
     async function sendUpdateTime() {
         const currentTime = video.currentTime;
         ws.send(JSON.stringify({ type: 'updateTime', data: currentTime }));
