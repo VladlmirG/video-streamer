@@ -1,16 +1,11 @@
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', function () {
     const video = document.getElementById('videoPlayer');
-    const playPauseBtn = document.getElementById('playPauseBtn');
-    const volumeControl = document.getElementById('volumeControl');
-    const customControls = document.getElementById('custom-controls');
     const liveDot = document.getElementById('liveDot');
-    
-    let isPlaying = false; // Track the playback state
 
     // WebSocket connection
     const ws = new WebSocket('ws://localhost:3000');
 
-    ws.onmessage = async function(event) {
+    ws.onmessage = async function (event) {
         const data = JSON.parse(event.data);
         await processWebSocketMessage(data);
     };
@@ -22,35 +17,53 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
-    playPauseBtn.addEventListener('click', function() {
-        if (isPlaying) {
-            video.pause();
-            playPauseBtn.textContent = 'Play';
-        } else {
-            video.play();
-            playPauseBtn.textContent = 'Pause';
-        }
-        isPlaying = !isPlaying;
+    video.addEventListener('loadeddata', function () {
+        // Send a message to the server to request the current status
+        ws.send(JSON.stringify({ type: 'requestStatus' }));
+    });
+
+    video.addEventListener('timeupdate', function () {
+        // Send the current playback time to the server asynchronously
         sendUpdateTime();
     });
 
-    video.addEventListener('timeupdate', function() {
-        sendUpdateTime();
+    video.addEventListener('ended', function () {
+        // Video finished, play again
+        video.currentTime = 0; // Reset to the beginning
+        video.play();
     });
-
-    volumeControl.addEventListener('input', function() {
-        video.volume = volumeControl.value;
-    });
-
 
     async function sendUpdateTime() {
         const currentTime = video.currentTime;
         ws.send(JSON.stringify({ type: 'updateTime', data: currentTime }));
     }
-});
 
-    video.addEventListener('click', function() {
-        // Toggle play/pause state on video click
-        ws.send(JSON.stringify({ type: 'playPause' }));
-    });
+    // Autoplay the video
+    video.autoplay = true;
+
+    // Hide controls, play/pause button, and volume control
+    video.controls = false;
+
+    // Hide play/pause button
+    const playPauseBtn = document.getElementById('playPauseBtn');
+    if (playPauseBtn) {
+        playPauseBtn.style.display = 'none';
+    }
+
+    // Hide volume control
+    const volumeControl = document.getElementById('volumeControl');
+    if (volumeControl) {
+        volumeControl.style.display = 'none';
+    }
+
+    // Hide custom controls
+    const customControls = document.getElementById('custom-controls');
+    if (customControls) {
+        customControls.style.display = 'none';
+    }
+
+    // Display the live dot
+    if (liveDot) {
+        liveDot.style.display = 'block';
+    }
 });

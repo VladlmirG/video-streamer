@@ -81,3 +81,17 @@ body {
 #volumeControl:hover {
     text-decoration: underline;
 }
+
+
+
+
+
+
+
+/* Apply specific styles for mobile screens */
+@media screen and (max-width: 767px) {
+    #videoPlayer {
+        height: 620px; /* Set the height relative to the viewport width */
+        object-fit: cover; /* Cover the container while maintaining the aspect ratio */
+    }
+}
