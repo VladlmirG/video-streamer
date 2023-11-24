@@ -8,8 +8,6 @@ const server = http.createServer(app);
 const wss = new WebSocket.Server({ server });
 
 let currentPlaybackTime = 0;
-let isPlaying = true; // Initial state is playing
-const loopDuration = 60; // Set the duration of your video loop in seconds
 
 // Serve static files from the 'public' directory
 app.use(express.static(path.join(__dirname, 'public')));
@@ -24,16 +22,10 @@ app.use((req, res, next) => {
 // Serve video files from the 'videos' directory
 app.use('/videos', express.static(path.join(__dirname, 'public', 'videos')));
 
-// Broadcast current playback time and play/pause state to all clients at regular intervals
-setInterval(() => {
-    updatePlaybackTime();
-    broadcastState();
-}, 1000); // Adjust the interval as needed
-
 // WebSocket connection handling
 wss.on('connection', (ws) => {
-    // Send the current playback time and play/pause state to the new client
-    ws.send(JSON.stringify({ type: 'currentTime', data: currentPlaybackTime, isPlaying }));
+    // Send the current playback time to the new client
+    ws.send(JSON.stringify({ type: 'currentTime', data: currentPlaybackTime }));
 
     // Handle messages from clients
     ws.on('message', (message) => {
@@ -41,13 +33,12 @@ wss.on('connection', (ws) => {
         if (data.type === 'updateTime') {
             // Update the current playback time
             currentPlaybackTime = data.data;
-            // Broadcast the updated time and play/pause state to all connected clients
-            broadcastState();
-        } else if (data.type === 'playPause') {
-            // Toggle play/pause state
-            isPlaying = !isPlaying;
-            // Broadcast the updated play/pause state to all connected clients
-            broadcastState();
+            // Broadcast the updated time to all connected clients
+            wss.clients.forEach((client) => {
+                if (client !== ws && client.readyState === WebSocket.OPEN) {
+                    client.send(JSON.stringify({ type: 'currentTime', data: currentPlaybackTime }));
+                }
+            });
         }
     });
 
@@ -56,22 +47,6 @@ wss.on('connection', (ws) => {
         console.log('Client disconnected');
     });
 });
-
-function updatePlaybackTime() {
-    // Update the current playback time only if the video is playing
-    if (isPlaying) {
-        currentPlaybackTime = (currentPlaybackTime + 1) % loopDuration;
-    }
-}
-
-function broadcastState() {
-    // Broadcast the updated time and play/pause state to all connected clients
-    wss.clients.forEach((client) => {
-        if (client.readyState === WebSocket.OPEN) {
-            client.send(JSON.stringify({ type: 'currentTime', data: currentPlaybackTime, isPlaying }));
-        }
-    });
-}
 
 const PORT = process.env.PORT || 3000;
 server.listen(PORT, () => {
