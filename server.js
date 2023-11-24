@@ -5,7 +5,7 @@ const path = require('path');
 
 const app = express();
 const server = http.createServer(app);
-const wss = new WebSocket.Server({ server, maxPayload: 1024 * 1024 * 10 }); // 10 MB
+const wss = new WebSocket.Server({ server}); // 10 MB
 
 
 
