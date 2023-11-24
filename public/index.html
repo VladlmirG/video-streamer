@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <link rel="icon" type="image/x-icon" href="./favicon.png">
+
+    <title>Synced Video Streaming</title>
+    <link rel="stylesheet" href="./style.css">
+</head>
+<body>
+    <div class="video-container">
+        <video id="videoPlayer">
+            <source src="./video/room.mp4" type="video/mp4">
+            Your browser does not support the video tag.
+        </video>
+        <div id="custom-controls">
+            <span id="liveDot"></span>
+            <button id="playPauseBtn">Play</button>
+            <input type="range" id="volumeControl" min="0" max="1" step="0.1" value="1">
+        </div>
+    </div>
+
+    <script src="./script.js"></script>
+</body>
+</html>
+
