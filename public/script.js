@@ -13,6 +13,13 @@ document.addEventListener('DOMContentLoaded', function() {
         if (data.type === 'currentTime') {
             // Update the video's currentTime without triggering a seek event
             video.currentTime = data.data;
+        } else if (data.type === 'isPlaying') {
+            // Toggle play/pause based on the received state
+            if (data.isPlaying) {
+                video.play();
+            } else {
+                video.pause();
+            }
         }
     }
 
@@ -20,5 +27,9 @@ document.addEventListener('DOMContentLoaded', function() {
         // Start the loop when the video is loaded
         video.play();
     });
-});
 
+    video.addEventListener('click', function() {
+        // Toggle play/pause state on video click
+        ws.send(JSON.stringify({ type: 'playPause' }));
+    });
+});
