@@ -4,7 +4,7 @@
   "description": "room video streamer",
   "main": "server.js",
   "scripts": {
-    "build": "run app",
+    "build": "npm run build",
     "test": "run test",
     "start": "node server.js"
   },
